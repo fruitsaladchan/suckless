@@ -1,0 +1,10 @@
+#!/bin/sh
+
+case $1 in
+up)
+	brillo -A 5 -q
+	;;
+down)
+	brillo -U 5 -q
+	;;
+esac

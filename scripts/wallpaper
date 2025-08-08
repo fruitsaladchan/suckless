@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+# Combined wallpaper picker and setter using nsxiv and pywal
+
+# Set default wallpaper directory
+DEFAULT_WALLDIR="$HOME/Pictures/wallpaper"
+WALLDIR="${1:-$DEFAULT_WALLDIR}"
+BG_LINK="${XDG_DATA_HOME:-$HOME/.local/share}/bg"
+
+# Function to choose wallpaper using nsxiv
+choose_wallpaper() {
+    local dir="$1"
+    command -v nsxiv >/dev/null || { echo "nsxiv not found"; exit 1; }
+
+    nsxiv -otb "$dir"/* | while read -r selected; do
+        [ -f "$selected" ] && set_wallpaper "$selected"
+    done
+}
+
+# Function to set wallpaper, generate wal colors, and notify
+set_wallpaper() {
+    img_path="$(readlink -f "$1")"
+    ln -sf "$img_path" "$BG_LINK"
+
+    if command -v wal >/dev/null; then
+        wal -n -i "$BG_LINK" -o "${XDG_CONFIG_HOME:-$HOME/.config}/wal/postrun" >/dev/null 2>&1
+    fi
+
+    xwallpaper --zoom "$BG_LINK"
+}
+
+# Function to restore the last set wallpaper
+restore_wallpaper() {
+    if [ -L "$BG_LINK" ] && [ -f "$BG_LINK" ]; then
+        set_wallpaper "$(readlink -f "$BG_LINK")"
+    else
+        # If no previous wallpaper is linked, set the default
+        choose_wallpaper "$DEFAULT_WALLDIR"
+    fi
+}
+
+# Main logic
+if [[ "$1" == "-r" || "$1" == "--restore" ]]; then
+    restore_wallpaper
+elif [ -n "$1" ] && [ -e "$1" ]; then
+    target="$(readlink -f "$1")"
+    mimetype=$(file --mime-type -b "$target")
+    if [[ $mimetype == image/* ]]; then
+        set_wallpaper "$target"
+    elif [[ $mimetype == inode/directory ]]; then
+        choose_wallpaper "$target"
+    else
+        notify-send "Error" "Not a valid image or directory."
+        exit 1
+    fi
+else
+    # No argument: open nsxiv in default WALLDIR
+    choose_wallpaper "$DEFAULT_WALLDIR"
+fi

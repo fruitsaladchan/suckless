@@ -1,0 +1,55 @@
+diff --git a/commands.c b/commands.c
+index abcdef1..1234567 100644
+--- a/commands.c
++++ b/commands.c
+@@ -XX,10 +XX,39 @@
+ bool cg_remove_image(arg_t _) {
+-    remove_file(fileidx, true);
+-    if (mode == MODE_IMAGE)
+-        load_image(fileidx);
+-    else
+-        tns.dirty = true;
+-    return true;
++    char response[16];
++    int rfd, wfd;
++    ssize_t n;
++
++    if (!files || !files[fileidx].path)
++        return false;
++
++    const char *const delete_prompt[] = {
++        "dmenu", "-p", "Delete this image?", NULL
++    };
++
++    if (spawn(&rfd, &wfd, 0, (char **)delete_prompt) < 0)
++        return false;
++
++    dprintf(wfd, "yes\nno\n");
++    close(wfd);
++
++    if ((n = read(rfd, response, sizeof(response) - 1)) <= 0) {
++        close(rfd);
++        return false;
++    }
++    close(rfd);
++
++    char *eol = memchr(response, '\n', n);
++    if (eol)
++        *eol = '\0';
++    else
++        response[n] = '\0';
++
++    if (strcmp(response, "yes") == 0) {
++        if (remove(files[fileidx].path) != 0) {
++            perror("Failed to delete file");
++            return false;
++        }
++        remove_file(fileidx, true);
++        if (mode == MODE_IMAGE)
++            load_image(fileidx);
++        else
++            tns.dirty = true;
++    }
++    return true;
+ }
+

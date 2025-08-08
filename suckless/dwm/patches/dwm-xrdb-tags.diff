@@ -1,0 +1,21 @@
+
++   unsigned int occtags = 0;
++    for (c = m->clients; c; c = c->next)
++        occtags |= c->tags;
++
++	x = 0;
++	for (i = 0; i < LENGTH(tags); i++) {
++		w = TEXTW(tags[i]);
++
++		unsigned int tagbit = 1 << i;
++		if (m->tagset[m->seltags] & tagbit) {
++			drw_setscheme(drw, scheme[SchemeSel]);  // selected tag
++		} else if (occtags & tagbit) {
++			drw_setscheme(drw, scheme[SchemeSel]); // occupied tag
++		} else {
++			drw_setscheme(drw, scheme[SchemeNorm]); // unoccupied tag, same as above
++		}
++
++		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & tagbit);
++		x += w;
++	}
