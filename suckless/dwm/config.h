@@ -131,7 +131,6 @@ static const Key keys[] = {
 	{ 0,XF86XK_PowerOff,                         exitdwm,      {0} },
     { MODKEY,                      XK_p,  spawn, {.v = (const char*[]){ "wallpaper", NULL } } },
     { MODKEY|ShiftMask,            XK_n,  spawn, {.v = (const char*[]){ "dmenu-notes", NULL } } },
-    { MODKEY|ShiftMask,            XK_n,  spawn, {.v = (const char*[]){ "dmenu-notes", NULL } } },
     { MODKEY|ShiftMask,            XK_p,  spawn, {.v = (const char*[]){ "passmenu", "-i", "-l", "10",  NULL } } },
     { 0, XF86XK_MonBrightnessUp,   spawn, {.v = (const char*[]){ "changebrightness", "up", NULL } } },
     { 0, XF86XK_MonBrightnessDown, spawn, {.v = (const char*[]){ "changebrightness", "down", NULL } } },
