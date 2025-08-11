@@ -147,7 +147,6 @@ cistrstr(const char *h, const char *n)
 	return NULL;
 }
 
-
 static int
 drawitem(struct item *item, int x, int y, int w)
 {

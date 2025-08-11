@@ -49,9 +49,7 @@
     ram_perc(const char *unused)
     {
         uintmax_t total, free, available, buffers, cached;
-        int percent;
     
-        // Read memory stats from /proc/meminfo
         if (pscanf("/proc/meminfo",
                    "MemTotal: %ju kB\n"
                    "MemFree: %ju kB\n"
@@ -61,18 +59,17 @@
                    &total, &free, &available, &buffers, &cached) != 5)
             return NULL;
     
-        // If total memory is zero, return NULL to avoid division by zero
         if (total == 0)
             return NULL;
     
         // Calculate used memory
-        // Using MemAvailable as it represents usable memory (including cached and buffered memory)
         unsigned long used_memory_kb = total - available;
     
-        // Calculate percentage of used memory
-        percent = (100 * used_memory_kb) / total;
+        // Calculate used percentage as a float
+        double percent = (100.0 * used_memory_kb) / total;
     
-        return bprintf("%d", percent);
+        //show 1 decimal place
+        return bprintf("%.1f", percent);
     }
 
 	const char *

@@ -3,7 +3,6 @@
 #include <X11/XF86keysym.h>
 #include "exitdwm.c"
 
-
 /* appearance */
 static const unsigned int borderpx  = 0;       /* border pixel of windows */
 static const unsigned int snap      = 3;       /* snap pixel */
@@ -13,11 +12,11 @@ static const unsigned int gappiv    = 9;       /* vert inner gap between windows
 static const unsigned int gappoh    = 9;       /* horiz outer gap between windows and screen edge */
 static const unsigned int gappov    = 9;       /* vert outer gap between windows and screen edge */
 static       int smartgaps          = 0;       /* 1 means no outer gap when there is only one window */
-static const int user_bh            = 14;      /* 2 is the default spacing around the bar's font */
+static const int user_bh            = 16;      /* 2 is the default spacing around the bar's font */
 static const int showbar            = 1;       /* 0 means no bar */
 static int topbar                   = 1;       /* 0 means bottom bar */
-static const int vertpad            = 0;      /* vertical padding of bar 11 is default */
-static const int sidepad            = 0;     /* 100 default horizontal padding of bar, 11 for flat */
+static const int vertpad            = 0;       /* vertical padding of bar 11 is default */
+static const int sidepad            = 0;       /* 100 default horizontal padding of bar, 11 for flat */
 static const char *fonts[] = {"JetBrainsMono Nerd Font:size=9.5:style:Bold"};
 static const char dmenufont[] = "FiraCode Nerd Font:size=8";
 static char normbgcolor[]           = "#222222";
@@ -35,9 +34,9 @@ static char *colors[][3] = {
 /* tags */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 static const Rule rules[] = {
-   	 /* class   instance  title          tags mask  isfloating  isterminal  noswallow  monitor */
+   	    /* class   instance  title          tags mask  isfloating  isterminal  noswallow  monitor */
         { "Firefox", NULL,     NULL,           0,         0,          0,           0,        -1 },
-        { "st",      NULL,     NULL,           0,         0,          1,           0,        -1 },
+        { "St",      NULL,     NULL,           0,         0,          1,           0,        -1 },
         { "Nsxiv",   NULL,     NULL,           0,         1,          0,           0,        -1 },
         { NULL,      NULL,     "Event Tester", 0,         0,          0,           1,        -1 },
 
@@ -132,8 +131,12 @@ static const Key keys[] = {
 	{ 0,XF86XK_PowerOff,                         exitdwm,      {0} },
     { MODKEY,                      XK_p,  spawn, {.v = (const char*[]){ "wallpaper", NULL } } },
     { MODKEY|ShiftMask,            XK_n,  spawn, {.v = (const char*[]){ "dmenu-notes", NULL } } },
-    { 0, XF86XK_MonBrightnessUp,   spawn, SHCMD("changebrightness up")},
-    { 0, XF86XK_MonBrightnessDown, spawn, SHCMD("changebrightness down")},
+    { MODKEY|ShiftMask,            XK_n,  spawn, {.v = (const char*[]){ "dmenu-notes", NULL } } },
+    { MODKEY|ShiftMask,            XK_p,  spawn, {.v = (const char*[]){ "passmenu", "-i", "-l", "10",  NULL } } },
+    { 0, XF86XK_MonBrightnessUp,   spawn, {.v = (const char*[]){ "changebrightness", "up", NULL } } },
+    { 0, XF86XK_MonBrightnessDown, spawn, {.v = (const char*[]){ "changebrightness", "down", NULL } } },
+
+
     { 0, XF86XK_AudioRaiseVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ +5%") },
     { 0, XF86XK_AudioLowerVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ -5%") },
     { 0, XF86XK_AudioMute, spawn,  SHCMD("pactl set-sink-mute @DEFAULT_SINK@ toggle") },

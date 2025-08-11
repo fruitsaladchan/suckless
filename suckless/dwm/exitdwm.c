@@ -1,3 +1,4 @@
+
 # include <stdio.h>
 # include <string.h>
 # include <stdlib.h>
@@ -48,6 +49,7 @@ void exitdwm ()
 # define S_OFFSCREEN "Off-screen"
 # define S_EXIT "Exit"
 # define S_REBOOT "Reboot"
+# define S_REBOOT_FIRMWARE "Reboot to Firmware"
 # define S_SHUTDOWN "Shutdown"
 # define S_KILL_PROCESS "kill Process"
 
@@ -56,6 +58,7 @@ void exitdwm ()
 # define S_OFFSCREEN_ICON "\uf108"
 # define S_EXIT_ICON "\uf2f5"
 # define S_REBOOT_ICON "\uf021"
+# define S_REBOOT_FIRMWARE_ICON "\uf2f2"
 # define S_SHUTDOWN_ICON "\uf011"
 # define S_KILL_PROCESS_ICON "\xE2\x9C\x96"
 
@@ -70,6 +73,7 @@ void exitdwm ()
 			S_FORMAT (OFFSCREEN) "\n"
 			S_FORMAT (EXIT) "\n"
 			S_FORMAT (REBOOT) "\n"
+			S_FORMAT (REBOOT_FIRMWARE) "\n"
 			S_FORMAT (SHUTDOWN) "\n"
 			"\" | dmenu -i | " S_FORMAT_CLEAR,
 		"r"
@@ -96,6 +100,10 @@ void exitdwm ()
 	else if (strcmp(exit_action, S_REBOOT) == 0) {
 		if (confirm_action("Reboot"))
 			system("systemctl reboot");
+	}
+	else if (strcmp(exit_action, S_REBOOT_FIRMWARE) == 0) {
+		if (confirm_action("Reboot to Firmware"))
+			system("systemctl reboot --firmware-setup");
 	}
 	else if (strcmp(exit_action, S_SHUTDOWN) == 0) {
 		if (confirm_action("Shutdown"))
@@ -131,6 +139,7 @@ close_streams:
 # undef S_OFFSCREEN
 # undef S_EXIT
 # undef S_REBOOT
+# undef S_REBOOT_FIRMWARE
 # undef S_SHUTDOWN
 # undef S_KILL_PROCESS
 # undef S_LOCK_ICON
@@ -138,9 +147,9 @@ close_streams:
 # undef S_OFFSCREEN_ICON
 # undef S_EXIT_ICON
 # undef S_REBOOT_ICON
+# undef S_REBOOT_FIRMWARE_ICON
 # undef S_SHUTDOWN_ICON
 # undef S_KILL_PROCESS_ICON
 # undef S_FORMAT
 # undef S_FORMAT_CLEAR
 }
-

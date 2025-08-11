@@ -1,8 +1,6 @@
 diff --git a/commands.c b/commands.c
-index abcdef1..1234567 100644
 --- a/commands.c
 +++ b/commands.c
-@@ -XX,10 +XX,39 @@
  bool cg_remove_image(arg_t _) {
 -    remove_file(fileidx, true);
 -    if (mode == MODE_IMAGE)

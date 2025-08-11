@@ -93,8 +93,7 @@ static const int THUMB_SIZE = 3;
 
 char nsxiv_xid[64]; /* will be set to nsxiv's xid when dmenu_search is invoked */
 const char *const dmenu_cmd[] = {
-	// "dmenu", "-i", "-l", "16", "-w", nsxiv_xid, NULL
-	"dmenu", "-i", "-l", "10", NULL
+	"dmenu", "-i", "-l", "16", "-F", "-w", nsxiv_xid, NULL
 };
 
 /* these modifiers will be used when processing keybindings */
@@ -153,7 +152,7 @@ static const keymap_t keys[] = {
 	{ 0,            XK_Up,            t_move_sel,           DIR_UP },
 	{ 0,            XK_l,             t_move_sel,           DIR_RIGHT },
 	{ 0,            XK_Right,         t_move_sel,           DIR_RIGHT },
-	// { 0,            XK_R,             t_reload_all,         None },
+	{ 0,            XK_R,             t_reload_all,         None },
 	{ 0,            XK_n,             i_navigate,           +1 },
 	{ 0,            XK_n,             i_scroll_to_edge,     DIR_LEFT | DIR_UP },
 	{ 0,            XK_space,         i_navigate,           +1 },
