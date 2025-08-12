@@ -195,7 +195,7 @@ static unsigned int defaultattr = 11;
  * Note that if you want to use ShiftMask with selmasks, set this to an other
  * modifier, set to 0 to not use it.
  */
-static uint forcemousemod = ShiftMask;
+static uint forcemousemod = 0;
 
 /*
  * Xresources preferences to load at startup
@@ -255,9 +255,6 @@ static MouseShortcut mshortcuts[] = {
 static char *openurlcmd[] = { "/bin/sh", "-c", "st-urlhandler -o", "externalpipe", NULL };
 static char *copyurlcmd[] = { "/bin/sh", "-c", "st-urlhandler -c", "externalpipe", NULL };
 static char *copyoutput[] = { "/bin/sh", "-c", "st-copyout", "externalpipe", NULL };
-// static char *openurlcmd[] = { "/bin/sh", "-c",
-// 	"xurls | dmenu -l 10 -w $WINDOWID | xargs -r open",
-// 	"externalpipe", NULL };
 
 static Shortcut shortcuts[] = {
 	/* mask                 keysym          function        argument */
@@ -266,11 +263,11 @@ static Shortcut shortcuts[] = {
 	{ ShiftMask,            XK_Print,       printscreen,    {.i =  0} },
 	{ XK_ANY_MOD,           XK_Print,       printsel,       {.i =  0} },
 	{ ControlMask,          XK_equal,       zoom,           {.f = +1} },
-	{ ControlMask,          XK_Home,        zoomreset,      {.f =  0} },
+	{ ControlMask,          XK_slash,       zoomreset,      {.f =  0} },
 	{ ControlMask,          XK_minus,       zoom,           {.f = -1} },
 	{ MODKEY,               XK_s,           chgalpha,       {.f = -1} }, /* Decrease opacity */
     { MODKEY,               XK_a,           chgalpha,       {.f = +1} }, /* Increase opacity */
-	{ MODKEY|ShiftMask,     XK_a,           chgalpha,       {.f =  0} }, /* Reset opacity */
+	{ MODKEY,               XK_w,           chgalpha,       {.f =  0} }, /* Reset opacity */
 	{ TERMMOD,              XK_C,           clipcopy,       {.i =  0} },
 	{ TERMMOD,              XK_V,           clippaste,      {.i =  0} },
 	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },

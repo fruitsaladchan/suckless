@@ -18,6 +18,8 @@ static const char *prompt =
    [SchemeNorm] = {"#bbbbbb", "#222222"},
    [SchemeSel] = {"#eeeeee", "#005577"},
    [SchemeOut] = {"#000000", "#00ffff"},
+   // [SchemeSelHighlight] = { "#ffc978", "#005577" },
+   // [SchemeNormHighlight] = { "#ffc978", "#222222" },
 };
 /* -l and -g options; controls number of lines and columns in grid if > 0 */
 static unsigned int lines = 17;

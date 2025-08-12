@@ -82,7 +82,7 @@ static const char *scratchpadcmd[] = { "st", "-t", scratchpadname, "-g", "110x34
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_n,      xrdb,           {.v = NULL } },
-	{ MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
+    { MODKEY,                       XK_d,      spawn,          {.v = (const char*[]){ "dmenu_run", "-i", NULL } } },
 	{ MODKEY, 	                    XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY|ShiftMask,		        XK_Return, togglescratch,  {.v = scratchpadcmd } },
 	{ MODKEY|ShiftMask,             XK_w,      spawn,          {.v = browser } },
@@ -127,15 +127,13 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
-	{ MODKEY|ControlMask|ShiftMask, XK_r,        quit,         {1} },
-	{ 0,XF86XK_PowerOff,                         exitdwm,      {0} },
+	{ MODKEY|ControlMask|ShiftMask, XK_r,      quit,          {1} },
+	{ 0,XF86XK_PowerOff,                       exitdwm,       {0} },
     { MODKEY,                      XK_p,  spawn, {.v = (const char*[]){ "wallpaper", NULL } } },
     { MODKEY|ShiftMask,            XK_n,  spawn, {.v = (const char*[]){ "dmenu-notes", NULL } } },
     { MODKEY|ShiftMask,            XK_p,  spawn, {.v = (const char*[]){ "passmenu", "-i", "-l", "10",  NULL } } },
     { 0, XF86XK_MonBrightnessUp,   spawn, {.v = (const char*[]){ "changebrightness", "up", NULL } } },
     { 0, XF86XK_MonBrightnessDown, spawn, {.v = (const char*[]){ "changebrightness", "down", NULL } } },
-
-
     { 0, XF86XK_AudioRaiseVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ +5%") },
     { 0, XF86XK_AudioLowerVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ -5%") },
     { 0, XF86XK_AudioMute, spawn,  SHCMD("pactl set-sink-mute @DEFAULT_SINK@ toggle") },

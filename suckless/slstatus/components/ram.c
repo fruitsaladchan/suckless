@@ -1,5 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include <stdio.h>
+#include <math.h>
 
 #include "../slstatus.h"
 #include "../util.h"
@@ -64,12 +65,13 @@
     
         // Calculate used memory
         unsigned long used_memory_kb = total - available;
+
     
         // Calculate used percentage as a float
-        double percent = (100.0 * used_memory_kb) / total;
+        int percent = (int)round((100.0 * used_memory_kb) / total);
     
         //show 1 decimal place
-        return bprintf("%.1f", percent);
+        return bprintf("%d", percent);
     }
 
 	const char *
