@@ -69,37 +69,7 @@ static const char unknown_str[] = "N/A";
  *                                                     (/sys/class/hwmon/...)
 
  */ 
-// use | instead of square brackets
-/* static const struct arg args[] = {
-    // function format          argument 
-    // {run_command, " %s | ", "date +%I:%M"},
-    // {run_command, " %s                            ", "date +'%b %d'"},
-    {battery_state, "%s", "BAT0"},
-    {battery_perc, " %s% /", "BAT0"},
-    {temp, "  %s󰔄 |", "/sys/class/thermal/thermal_zone10/temp"},
-    // {run_command, "   %s% |", "brillo"},
-    // add fan speed
-    {cpu_perc, "   %s% /",  NULL},
-    // {cpu_freq, " %sHZ  /",  NULL},
-    {ram_perc, "   %s% |", NULL},
-    // {disk_perc, "   %s%  |", "/home"},
-    {wifi_essid, " %s - ", "wlo1"},
-    {ipv4, " %s | ", "wlo1"},
 
-    // {fanspeed, " %s | ", "/sys/class/hwmon/hwmon2/device/fan1_input" },
-    // {io_in, "R %s/", NULL},
-    // {io_out, " W %s | ", NULL},
-    // {netspeed_rx, " R %s | ", "wlo1"},
-    // {netspeed_tx, " W %s | ", "wlo1"},
-    {uptime, "%s | ",  NULL},
-   // {keymap, "   %s  ", NULL},
-    {datetime, "%s | ",  "%I:%M - %b %d"},
-    // {run_command, "%s -", "date +%I:%M"},
-    // {run_command, " %s ", "date +'%b %d'"},
-
-};
-
-*/
 //square brackets 
 static const struct arg args[] = {
     /* function format          argument */
@@ -107,15 +77,15 @@ static const struct arg args[] = {
     // {run_command, " %s                            ", "date +'%b %d'"},
     {battery_state, "[ %s", "BAT0"},
     {battery_perc, "%s% /", "BAT0"},
-    {temp, "  %s󰔄 ] ", "/sys/class/thermal/thermal_zone10/temp"},
+    {temp, " TEMP %s󰔄 ] ", "/sys/class/thermal/thermal_zone10/temp"},
     // {run_command, "   %s% |", "brillo"},
     // add fan speed
-    {cpu_perc, "[   %s% /",  NULL},
+    {cpu_perc, "[ CPU  %s% /",  NULL},
     // {cpu_freq, " %sHZ  /",  NULL},
-    {ram_perc, "   %s% ] ", NULL},
+    {ram_perc, " RAM  %s% ] ", NULL},
     // {disk_perc, "   %s%  |", "/home"},
-    {wifi_essid, "[ %s -", "wlo1"},
-    {ipv4, " %s ] ", "wlo1"},
+    {wifi_essid, "[ %s -", "wlan0"},
+    {ipv4, " %s ] ", "wlan0"},
 
     // {fanspeed, " %s | ", "/sys/class/hwmon/hwmon2/device/fan1_input" },
     // {io_in, "R %s/", NULL},

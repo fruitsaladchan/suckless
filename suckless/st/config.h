@@ -5,9 +5,9 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "FiraCode Nerd Font:pixelsize=11:antialias=true:autohint=true";
-static char *font2[] = { "FiraCode Nerd Font:pixelsize=10:antialias=true:autohint=true" };
-static int borderpx = 0; /*padding*/
+static char *font = "monocraft:pixelsize=11:antialias=true";
+static int borderpx = 5; /*padding*/
+
 
 /*
  * What program is execed by st depends of these precedence rules:
@@ -66,7 +66,7 @@ static unsigned int blinktimeout = 800;
 /*
  * thickness of underline and bar cursors
  */
-static unsigned int cursorthickness = 2;
+static unsigned int cursorthickness = 1;
 
 /*
  * 1: render most of the lines/blocks characters without using the font for
@@ -180,7 +180,9 @@ static unsigned int rows = 24;
 /*
  * Default colour and shape of the mouse cursor
  */
-static unsigned int mouseshape = XC_arrow;
+// static unsigned int mouseshape = XC_arrow;
+// static unsigned int mouseshape = XC_left_ptr;
+static unsigned int mouseshape = XC_watch;
 static unsigned int mousefg = 7;
 static unsigned int mousebg = 0;
 
@@ -254,7 +256,7 @@ static MouseShortcut mshortcuts[] = {
 
 static char *openurlcmd[] = { "/bin/sh", "-c", "st-urlhandler -o", "externalpipe", NULL };
 static char *copyurlcmd[] = { "/bin/sh", "-c", "st-urlhandler -c", "externalpipe", NULL };
-static char *copyoutput[] = { "/bin/sh", "-c", "st-copyout", "externalpipe", NULL };
+static char *copyoutput[] = { "/bin/sh", "-c", "st-copyout -c", "externalpipe", NULL };
 
 static Shortcut shortcuts[] = {
 	/* mask                 keysym          function        argument */

@@ -7,18 +7,18 @@
 static const unsigned int borderpx  = 0;       /* border pixel of windows */
 static const unsigned int snap      = 3;       /* snap pixel */
 static const int swallowfloating    = 0;       /* 1 means swallow floating by default */
-static const unsigned int gappih    = 9;       /* horiz inner gap between windows */
-static const unsigned int gappiv    = 9;       /* vert inner gap between windows */
-static const unsigned int gappoh    = 9;       /* horiz outer gap between windows and screen edge */
-static const unsigned int gappov    = 9;       /* vert outer gap between windows and screen edge */
+static const unsigned int gappih    = 10;       /* horiz inner gap between windows */
+static const unsigned int gappiv    = 10;       /* vert inner gap between windows */
+static const unsigned int gappoh    = 10;       /* horiz outer gap between windows and screen edge */
+static const unsigned int gappov    = 10;       /* vert outer gap between windows and screen edge */
 static       int smartgaps          = 0;       /* 1 means no outer gap when there is only one window */
 static const int user_bh            = 16;      /* 2 is the default spacing around the bar's font */
 static const int showbar            = 1;       /* 0 means no bar */
 static int topbar                   = 1;       /* 0 means bottom bar */
 static const int vertpad            = 0;       /* vertical padding of bar 11 is default */
 static const int sidepad            = 0;       /* 100 default horizontal padding of bar, 11 for flat */
-static const char *fonts[] = {"JetBrainsMono Nerd Font:size=9.5:style:Bold"};
-static const char dmenufont[] = "FiraCode Nerd Font:size=8";
+// static const char *fonts[] = {"JetBrainsMono Nerd Font:size=9.5:style:Bold"};
+static const char *fonts[] = {"monocraft:size=9.5:style:Bold"};
 static char normbgcolor[]           = "#222222";
 static char normbordercolor[]       = "#444444";
 static char normfgcolor[]           = "#bbbbbb";
@@ -75,22 +75,23 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-i", NULL };
 static const char *termcmd[] = {"st", NULL};
-static const char *browser[] = {"librewolf", NULL};
 static const char scratchpadname[] = "scratchpad";
-static const char *scratchpadcmd[] = { "st", "-t", scratchpadname, "-g", "110x34", NULL };
+static const char *scratchpadcmd[] = { "st", "-t", scratchpadname, "-g", "110x40", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_n,      xrdb,           {.v = NULL } },
-    { MODKEY,                       XK_d,      spawn,          {.v = (const char*[]){ "dmenu_run", "-i", NULL } } },
-	{ MODKEY, 	                    XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY|ShiftMask,		        XK_Return, togglescratch,  {.v = scratchpadcmd } },
-	{ MODKEY|ShiftMask,             XK_w,      spawn,          {.v = browser } },
+    { MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
+    { MODKEY|ShiftMask,		        XK_Return, togglescratch,  {.v = scratchpadcmd } },
+    { MODKEY,                       XK_Return, spawn,          {.v = (const char*[]){ "st", NULL } } },
+    { MODKEY|ShiftMask,             XK_w,      spawn,          {.v = (const char*[]){ "librewolf", NULL } } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
-	{ MODKEY,		            	XK_a,	   togglegaps,     {0}},
-	{ MODKEY|ShiftMask,		        XK_a,      defaultgaps,    {0} },
+	{ MODKEY,		            	XK_a,	   defaultgaps,    {0}},
+	{ MODKEY|ShiftMask,		        XK_a,      togglegaps,     {0} },
 	{ MODKEY, 			            XK_z, 	   incrgaps, 	   {.i = +3}},
    	{ MODKEY, 	            		XK_x,	   incrgaps, 	   {.i = -3}},
+    { MODKEY,                       XK_equal,  incrogaps,      {.i = +1 } },
+	{ MODKEY,                       XK_minus,  incrogaps,      {.i = -1 } },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 /*  { MODKEY,                       XK_g,      incnmaster,     {.i = +1 } }, 
@@ -100,13 +101,24 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_k,      movestack,      {.i = -1 } },
 	{ MODKEY,                       XK_space,  zoom,           {0} },
+	{ MODKEY,                       XK_Down,   moveresize,     {.v = "0x 25y 0w 0h" } },
+	{ MODKEY,                       XK_Up,     moveresize,     {.v = "0x -25y 0w 0h" } },
+	{ MODKEY,                       XK_Right,  moveresize,     {.v = "25x 0y 0w 0h" } },
+	{ MODKEY,                       XK_Left,   moveresize,     {.v = "-25x 0y 0w 0h" } },
+	{ MODKEY|ShiftMask,             XK_Down,   moveresize,     {.v = "0x 0y 0w 25h" } },
+	{ MODKEY|ShiftMask,             XK_Up,     moveresize,     {.v = "0x 0y 0w -25h" } },
+	{ MODKEY|ShiftMask,             XK_Right,  moveresize,     {.v = "0x 0y 25w 0h" } },
+	{ MODKEY|ShiftMask,             XK_Left,   moveresize,     {.v = "0x 0y -25w 0h" } },
 	{ MODKEY, 	            		XK_f,	   togglefullscr,  {0}},
 	{ MODKEY,	                    XK_q,      killclient,     {0} },
-	{ MODKEY, 		            	XK_t, 	   setlayout, 	   {.v = &layouts[0]}},
-   	{ MODKEY|ShiftMask, 	    	XK_space,  setlayout, 	   {.v = &layouts[1]}},
-    { MODKEY, 			            XK_i,	   setlayout, 	   {.v = &layouts[3]}},
-    { MODKEY|ShiftMask, 		    XK_i,	   setlayout, 	   {.v = &layouts[4]}},
-    { MODKEY|ShiftMask, 		    XK_t,	   setlayout, 	   {.v = &layouts[5]}},
+    { MODKEY|ControlMask,           XK_q,      killclient,     {.ui = 1} },  // kill unselect
+    { MODKEY|ShiftMask|ControlMask, XK_q,      killclient,     {.ui = 2} },  // killall
+    { MODKEY,                       XK_s,      togglesticky,   {0} },
+	{ MODKEY, 		            	XK_t, 	   setlayout, 	   {.v = &layouts[0]}}, //tile
+   	{ MODKEY|ShiftMask, 	    	XK_space,  setlayout, 	   {.v = &layouts[1]}}, //floating
+    { MODKEY, 			            XK_i,	   setlayout, 	   {.v = &layouts[3]}}, //centered master
+    { MODKEY|ShiftMask, 		    XK_i,	   setlayout, 	   {.v = &layouts[4]}}, //floating centered master
+    { MODKEY|ShiftMask, 		    XK_t,	   setlayout, 	   {.v = &layouts[5]}}, //bstack
     { MODKEY, 			            XK_y,	   setlayout, 	   {.v = &layouts[7]}},
     { MODKEY|ShiftMask, 		    XK_y,	   setlayout, 	   {.v = &layouts[8]}},
     { MODKEY, 			            XK_u,	   setlayout, 	   {.v = &layouts[9]}},
@@ -132,10 +144,13 @@ static const Key keys[] = {
     { MODKEY,                      XK_p,  spawn, {.v = (const char*[]){ "wallpaper", NULL } } },
     { MODKEY|ShiftMask,            XK_n,  spawn, {.v = (const char*[]){ "dmenu-notes", NULL } } },
     { MODKEY|ShiftMask,            XK_p,  spawn, {.v = (const char*[]){ "passmenu", "-i", "-l", "10",  NULL } } },
+    { MODKEY|ShiftMask,            XK_s,  spawn, {.v = (const char*[]){ "shot", "select", NULL } } },
+    { MODKEY|ShiftMask,            XK_Print,  spawn, {.v = (const char*[]){ "shot", "full", "full", NULL } } },
     { 0, XF86XK_MonBrightnessUp,   spawn, {.v = (const char*[]){ "changebrightness", "up", NULL } } },
     { 0, XF86XK_MonBrightnessDown, spawn, {.v = (const char*[]){ "changebrightness", "down", NULL } } },
     { 0, XF86XK_AudioRaiseVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ +5%") },
     { 0, XF86XK_AudioLowerVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ -5%") },
+    { 0, XF86XK_AudioMicMute, spawn, SHCMD("pactl set-source-mute @DEFAULT_SOURCE@ toggle") },
     { 0, XF86XK_AudioMute, spawn,  SHCMD("pactl set-sink-mute @DEFAULT_SINK@ toggle") },
 
 };

@@ -65,12 +65,7 @@
     
         // Calculate used memory
         unsigned long used_memory_kb = total - available;
-
-    
-        // Calculate used percentage as a float
         int percent = (int)round((100.0 * used_memory_kb) / total);
-    
-        //show 1 decimal place
         return bprintf("%d", percent);
     }
 

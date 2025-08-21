@@ -1,7 +1,8 @@
+/*i use this with artix+openrc. adjust shutdown/restart/firmware commands based on init system ie systemd */
 
-# include <stdio.h>
-# include <string.h>
-# include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 int confirm_action(const char *action) {
     char cmd[128];
@@ -30,6 +31,7 @@ void exitdwm ()
 	defined S_OFFSCREEN			|| \
 	defined S_EXIT				|| \
 	defined S_REBOOT			|| \
+	defined S_REBOOT_FIRMWARE	|| \
 	defined S_SHUTDOWN			|| \
 	defined S_KILL_PROCESS		|| \
 	defined S_LOCK_ICON			|| \
@@ -37,6 +39,7 @@ void exitdwm ()
 	defined S_OFFSCREEN_ICON	|| \
 	defined S_EXIT_ICON			|| \
 	defined S_REBOOT_ICON		|| \
+	defined S_REBOOT_FIRMWARE_ICON	|| \
 	defined S_SHUTDOWN_ICON		|| \
 	defined S_KILL_PROCESS_ICON	|| \
 	defined S_FORMAT			|| \
@@ -99,15 +102,15 @@ void exitdwm ()
 		quit(&(const Arg) {0});
 	else if (strcmp(exit_action, S_REBOOT) == 0) {
 		if (confirm_action("Reboot"))
-			system("systemctl reboot");
+			system("loginctl reboot");
 	}
 	else if (strcmp(exit_action, S_REBOOT_FIRMWARE) == 0) {
 		if (confirm_action("Reboot to Firmware"))
-			system("systemctl reboot --firmware-setup");
+			system("loginctl reboot --firmware-setup");  // systemd uses systemctl reboot --firmware
 	}
 	else if (strcmp(exit_action, S_SHUTDOWN) == 0) {
 		if (confirm_action("Shutdown"))
-			system("systemctl poweroff -i");
+			system("loginctl poweroff now");
 	}
 	else if (strcmp(exit_action, S_KILL_PROCESS) == 0) {
 		FILE *proc_menu = popen(
@@ -153,3 +156,4 @@ close_streams:
 # undef S_FORMAT
 # undef S_FORMAT_CLEAR
 }
+

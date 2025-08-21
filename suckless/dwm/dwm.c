@@ -56,7 +56,7 @@
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
                                * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
-#define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
+#define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]) || C->issticky)
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
@@ -82,7 +82,7 @@
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
-       NetWMFullscreen, NetActiveWindow, NetWMWindowType,
+       NetWMFullscreen, NetWMSticky, NetActiveWindow, NetWMWindowType,
        NetWMWindowTypeDialog, NetClientList, NetClientInfo, NetLast }; /* EWMH atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkClientWin,
@@ -113,7 +113,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, issticky;
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -209,6 +209,7 @@ static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
+static void killthis(Client *c);
 static void killclient(const Arg *arg);
 static void loadxrdb(void);
 static void manage(Window w, XWindowAttributes *wa);
@@ -216,6 +217,8 @@ static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
+static void moveresize(const Arg *arg);
+static void moveresizeedge(const Arg *arg);
 static void movemouse(const Arg *arg);
 static Client *nexttiled(Client *c);
 static void pop(Client *c);
@@ -234,6 +237,7 @@ static void setclientstate(Client *c, long state);
 static void setclienttagprop(Client *c);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
+static void setsticky(Client *c, int sticky);
 static void setlayout(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
@@ -244,6 +248,7 @@ static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
+static void togglesticky(const Arg *arg);
 static void togglescratch(const Arg *arg);
 static void togglefullscr(const Arg *arg);
 static void toggletag(const Arg *arg);
@@ -649,6 +654,10 @@ clientmessage(XEvent *e)
 		|| cme->data.l[2] == netatom[NetWMFullscreen])
 			setfullscreen(c, (cme->data.l[0] == 1 /* _NET_WM_STATE_ADD    */
 				|| (cme->data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !c->isfullscreen)));
+
+        if (cme->data.l[1] == netatom[NetWMSticky]
+                || cme->data.l[2] == netatom[NetWMSticky])
+            setsticky(c, (cme->data.l[0] == 1 || (cme->data.l[0] == 2 && !c->issticky)));
 	} else if (cme->message_type == netatom[NetActiveWindow]) {
 		if (c != selmon->sel && !c->isurgent)
 			seturgent(c, 1);
@@ -1162,19 +1171,36 @@ keypress(XEvent *e)
 }
 
 void
-killclient(const Arg *arg)
-{
-	if (!selmon->sel)
-		return;
-	if (!sendevent(selmon->sel, wmatom[WMDelete])) {
+killthis(Client *c) {
+	if (!sendevent(c, wmatom[WMDelete])) {
 		XGrabServer(dpy);
 		XSetErrorHandler(xerrordummy);
 		XSetCloseDownMode(dpy, DestroyAll);
-		XKillClient(dpy, selmon->sel->win);
+		XKillClient(dpy, c->win);
 		XSync(dpy, False);
 		XSetErrorHandler(xerror);
 		XUngrabServer(dpy);
 	}
+}
+
+void
+killclient(const Arg *arg)
+{
+    Client *c;
+
+	if (!selmon->sel)
+		return;
+
+    if (!arg->ui || arg->ui == 0) {
+        killthis(selmon->sel);
+        return;
+    }
+
+    for (c = selmon->clients; c; c = c->next) {
+        if (!ISVISIBLE(c) || (arg->ui == 1 && c == selmon->sel))
+            continue;
+        killthis(c);
+    }
 }
 
 void
@@ -1419,6 +1445,158 @@ movemouse(const Arg *arg)
 		sendmon(c, m);
 		selmon = m;
 		focus(NULL);
+	}
+}
+
+void
+moveresize(const Arg *arg) {
+	/* only floating windows can be moved */
+	Client *c;
+	c = selmon->sel;
+	int x, y, w, h, nx, ny, nw, nh, ox, oy, ow, oh;
+	char xAbs, yAbs, wAbs, hAbs;
+	int msx, msy, dx, dy, nmx, nmy;
+	unsigned int dui;
+	Window dummy;
+
+	if (!c || !arg)
+		return;
+	if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
+		return;
+	if (sscanf((char *)arg->v, "%d%c %d%c %d%c %d%c", &x, &xAbs, &y, &yAbs, &w, &wAbs, &h, &hAbs) != 8)
+		return;
+
+	/* compute new window position; prevent window from be positioned outside the current monitor */
+	nw = c->w + w;
+	if (wAbs == 'W')
+		nw = w < selmon->mw - 2 * c->bw ? w : selmon->mw - 2 * c->bw;
+
+	nh = c->h + h;
+	if (hAbs == 'H')
+		nh = h < selmon->mh - 2 * c->bw ? h : selmon->mh - 2 * c->bw;
+
+	nx = c->x + x;
+	if (xAbs == 'X') {
+		if (x < selmon->mx)
+			nx = selmon->mx;
+		else if (x > selmon->mx + selmon->mw)
+			nx = selmon->mx + selmon->mw - nw - 2 * c->bw;
+		else
+			nx = x;
+	}
+
+	ny = c->y + y;
+	if (yAbs == 'Y') {
+		if (y < selmon->my)
+			ny = selmon->my;
+		else if (y > selmon->my + selmon->mh)
+			ny = selmon->my + selmon->mh - nh - 2 * c->bw;
+		else
+			ny = y;
+	}
+
+	ox = c->x;
+	oy = c->y;
+	ow = c->w;
+	oh = c->h;
+
+	XRaiseWindow(dpy, c->win);
+	Bool xqp = XQueryPointer(dpy, root, &dummy, &dummy, &msx, &msy, &dx, &dy, &dui);
+	resize(c, nx, ny, nw, nh, True);
+
+	/* move cursor along with the window to avoid problems caused by the sloppy focus */
+	if (xqp && ox <= msx && (ox + ow) >= msx && oy <= msy && (oy + oh) >= msy)
+	{
+		nmx = c->x - ox + c->w - ow;
+		nmy = c->y - oy + c->h - oh;
+		/* make sure the cursor stays inside the window */
+		if ((msx + nmx) > c->x && (msy + nmy) > c->y)
+			XWarpPointer(dpy, None, None, 0, 0, 0, 0, nmx, nmy);
+	}
+}
+
+void
+moveresizeedge(const Arg *arg) {
+	/* move or resize floating window to edge of screen */
+	Client *c;
+	c = selmon->sel;
+	char e;
+	int nx, ny, nw, nh, ox, oy, ow, oh, bp;
+	int msx, msy, dx, dy, nmx, nmy;
+	int starty;
+	unsigned int dui;
+	Window dummy;
+
+	nx = c->x;
+	ny = c->y;
+	nw = c->w;
+	nh = c->h;
+
+	starty = selmon->showbar && topbar ? bh : 0;
+	bp = selmon->showbar && !topbar ? bh : 0;
+
+	if (!c || !arg)
+		return;
+	if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
+		return;
+	if(sscanf((char *)arg->v, "%c", &e) != 1)
+		return;
+
+	if(e == 't')
+		ny = starty;
+
+	if(e == 'b')
+		ny = c->h > selmon->mh - 2 * c->bw ? c->h - bp : selmon->mh - c->h - 2 * c->bw - bp;
+
+	if(e == 'l')
+		nx = selmon->mx;
+
+	if(e == 'r')
+		nx = c->w > selmon->mw - 2 * c->bw ? selmon->mx + c->w : selmon->mx + selmon->mw - c->w - 2 * c->bw;
+
+	if(e == 'T') {
+		/* if you click to resize again, it will return to old size/position */
+		if(c->h + starty == c->oldh + c->oldy) {
+			nh = c->oldh;
+			ny = c->oldy;
+		} else {
+			nh = c->h + c->y - starty;
+			ny = starty;
+		}
+	}
+
+	if(e == 'B')
+		nh = c->h + c->y + 2 * c->bw + bp == selmon->mh ? c->oldh : selmon->mh - c->y - 2 * c->bw - bp;
+
+	if(e == 'L') {
+		if(selmon->mx + c->w == c->oldw + c->oldx) {
+			nw = c->oldw;
+			nx = c->oldx;
+		} else {
+			nw = c->w + c->x - selmon->mx;
+			nx = selmon->mx;
+		}
+	}
+
+	if(e == 'R')
+		nw = c->w + c->x + 2 * c->bw == selmon->mx + selmon->mw ? c->oldw : selmon->mx + selmon->mw - c->x - 2 * c->bw;
+
+	ox = c->x;
+	oy = c->y;
+	ow = c->w;
+	oh = c->h;
+
+	XRaiseWindow(dpy, c->win);
+	Bool xqp = XQueryPointer(dpy, root, &dummy, &dummy, &msx, &msy, &dx, &dy, &dui);
+	resizeclient(c, nx, ny, nw, nh);
+
+	/* move cursor along with the window to avoid problems caused by the sloppy focus */
+	if (xqp && ox <= msx && (ox + ow) >= msx && oy <= msy && (oy + oh) >= msy) {
+		nmx = c->x - ox + c->w - ow;
+		nmy = c->y - oy + c->h - oh;
+		/* make sure the cursor stays inside the window */
+		if ((msx + nmx) > c->x && (msy + nmy) > c->y)
+			XWarpPointer(dpy, None, None, 0, 0, 0, 0, nmx, nmy);
 	}
 }
 
@@ -1729,6 +1907,23 @@ setfullscreen(Client *c, int fullscreen)
 }
 
 void
+	 setsticky(Client *c, int sticky)
+	 {
+
+		 if(sticky && !c->issticky) {
+			 XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
+					 PropModeReplace, (unsigned char *) &netatom[NetWMSticky], 1);
+			 c->issticky = 1;
+		 } else if(!sticky && c->issticky){
+			 XChangeProperty(dpy, c->win, netatom[NetWMState], XA_ATOM, 32,
+					 PropModeReplace, (unsigned char *)0, 0);
+			 c->issticky = 0;
+			 arrange(c->mon);
+		 }
+	 }
+
+
+void
 setlayout(const Arg *arg)
 {
 	if (!arg || !arg->v || arg->v != selmon->lt[selmon->sellt])
@@ -1805,6 +2000,7 @@ setup(void)
 	netatom[NetWMState] = XInternAtom(dpy, "_NET_WM_STATE", False);
 	netatom[NetWMCheck] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", False);
 	netatom[NetWMFullscreen] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+	netatom[NetWMSticky] = XInternAtom(dpy, "_NET_WM_STATE_STICKY", False);
 	netatom[NetWMWindowType] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
 	netatom[NetWMWindowTypeDialog] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
 	netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
@@ -1991,6 +2187,15 @@ togglescratch(const Arg *arg)
 		}
 	} else
 		spawn(arg);
+}
+
+void
+togglesticky(const Arg *arg)
+{
+	if (!selmon->sel)
+		return;
+	setsticky(selmon->sel, !selmon->sel->issticky);
+	arrange(selmon);
 }
 
 void
@@ -2329,6 +2534,9 @@ updatewindowtype(Client *c)
 
 	if (state == netatom[NetWMFullscreen])
 		setfullscreen(c, 1);
+	if (state == netatom[NetWMSticky]) {
+		setsticky(c, 1);
+	}
 	if (wtype == netatom[NetWMWindowTypeDialog])
 		c->isfloating = 1;
 }
@@ -2659,3 +2867,4 @@ main(int argc, char *argv[])
 	XCloseDisplay(dpy);
 	return EXIT_SUCCESS;
 }
+
