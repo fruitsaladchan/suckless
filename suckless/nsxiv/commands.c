@@ -348,7 +348,42 @@ bool cg_copy_path(arg_t _) {
     dprintf(wfd, "%s\n", files[fileidx].path);
     close(wfd);
 
-    // Optionally, wait for the process to finish (if desired, can be omitted for non-blocking)
+    close(rfd);
+
+    return true;
+}
+
+
+//copy image to clipboard
+bool cg_copy_image(arg_t _) {
+    if (!files || !files[fileidx].path)
+        return false;
+
+    const char *const copy_image_prompt[] = {
+        "xclip", "-selection", "clipboard", "-t", "image/png", "-i", NULL
+    };
+
+    // spawn a new process to copy the image to the clipboard using xclip
+    int rfd, wfd;
+    if (spawn(&rfd, &wfd, 0, (char **)copy_image_prompt) < 0)
+        return false;
+
+    FILE *image_file = fopen(files[fileidx].path, "rb");
+    if (!image_file) {
+        close(wfd);
+        return false;
+    }
+
+    // read and write the image content to xclip
+    char buffer[4096];
+    size_t bytes_read;
+    while ((bytes_read = fread(buffer, 1, sizeof(buffer), image_file)) > 0) {
+        write(wfd, buffer, bytes_read);
+    }
+
+    // close file and file descriptors
+    fclose(image_file);
+    close(wfd);
     close(rfd);
 
     return true;

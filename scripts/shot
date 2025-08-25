@@ -1,0 +1,26 @@
+#!/bin/bash
+
+timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+output_dir="$HOME/Pictures/screenshots/"
+output_file="$output_dir/$timestamp.png"
+
+if [[ "$1" == "full" ]]; then
+    # full screen capture
+    scrot --pointer --quality=100 "$output_file"
+
+elif [[ "$1" == "select" ]]; then
+    # select area to capture
+    scrot --select --line width=2,opacity=60,mode=edge "$output_file"
+
+elif [[ "$1" == "window" ]]; then
+    # capture window
+    scrot  --pointer --window "$(xdotool getwindowfocus -f)" "$output_file"
+elif [[ "$1" == "text" ]]; then
+    # capture selected area and extract text using tesseract
+    scrot --select --line width=2,opacity=60,mode=edge "$output_file"
+    tesseract "$output_file" - | xclip -selection clipboard
+    rm "$output_file"
+else
+    # default: full screen capture if no argument is given
+    scrot --pointer --quality=100 "$output_file"
+fi

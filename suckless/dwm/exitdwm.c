@@ -1,5 +1,3 @@
-/*i use this with artix+openrc. adjust shutdown/restart/firmware commands based on init system ie systemd */
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -106,7 +104,7 @@ void exitdwm ()
 	}
 	else if (strcmp(exit_action, S_REBOOT_FIRMWARE) == 0) {
 		if (confirm_action("Reboot to Firmware"))
-			system("loginctl reboot --firmware-setup");  // systemd uses systemctl reboot --firmware
+			system("loginctl reboot --firmware-setup"); 
 	}
 	else if (strcmp(exit_action, S_SHUTDOWN) == 0) {
 		if (confirm_action("Shutdown"))

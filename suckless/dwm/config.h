@@ -146,6 +146,7 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,            XK_p,  spawn, {.v = (const char*[]){ "passmenu", "-i", "-l", "10",  NULL } } },
     { MODKEY|ShiftMask,            XK_s,  spawn, {.v = (const char*[]){ "shot", "select", NULL } } },
     { MODKEY|ShiftMask,            XK_Print,  spawn, {.v = (const char*[]){ "shot", "full", "full", NULL } } },
+    { MODKEY|ShiftMask|ControlMask,XK_t,  spawn, {.v = (const char*[]){ "shot", "text", "full", NULL } } },
     { 0, XF86XK_MonBrightnessUp,   spawn, {.v = (const char*[]){ "changebrightness", "up", NULL } } },
     { 0, XF86XK_MonBrightnessDown, spawn, {.v = (const char*[]){ "changebrightness", "down", NULL } } },
     { 0, XF86XK_AudioRaiseVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ +5%") },
