@@ -247,6 +247,7 @@ static void spawn(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void togglebar(const Arg *arg);
+static void toggletopbar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglesticky(const Arg *arg);
 static void togglescratch(const Arg *arg);
@@ -334,6 +335,7 @@ struct Pertag {
 	unsigned int sellts[LENGTH(tags) + 1]; /* selected layouts */
 	const Layout *ltidxs[LENGTH(tags) + 1][2]; /* matrix of tags and layouts indexes  */
 	int showbars[LENGTH(tags) + 1]; /* display bar for the current tag */
+    int topbars[LENGTH(tags) + 1]; /* bar position for each tag */
 };
 
 static unsigned int scratchtag = 1 << LENGTH(tags);
@@ -788,12 +790,11 @@ createmon(void)
 	for (i = 0; i <= LENGTH(tags); i++) {
 		m->pertag->nmasters[i] = m->nmaster;
 		m->pertag->mfacts[i] = m->mfact;
-
 		m->pertag->ltidxs[i][0] = m->lt[0];
 		m->pertag->ltidxs[i][1] = m->lt[1];
 		m->pertag->sellts[i] = m->sellt;
-
 		m->pertag->showbars[i] = m->showbar;
+        m->pertag->topbars[i] = m->topbar; 
 	}
 
 	return m;
@@ -2147,6 +2148,15 @@ togglebar(const Arg *arg)
 }
 
 void
+toggletopbar(const Arg *arg)
+{
+	selmon->topbar = selmon->pertag->topbars[selmon->pertag->curtag] = !selmon->topbar;
+	updatebarpos(selmon);
+	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx + sp, selmon->by + vp, selmon->ww - 2 * sp, bh);
+	arrange(selmon);
+}
+
+void
 togglefloating(const Arg *arg)
 {
 	if (!selmon->sel)
@@ -2244,6 +2254,12 @@ toggleview(const Arg *arg)
 
 		if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
 			togglebar(NULL);
+
+        if (selmon->topbar != selmon->pertag->topbars[selmon->pertag->curtag]) {
+            selmon->topbar = selmon->pertag->topbars[selmon->pertag->curtag];
+            updatebarpos(selmon);
+            XMoveResizeWindow(dpy, selmon->barwin, selmon->wx + sp, selmon->by + vp, selmon->ww - 2 * sp, bh);
+        }
 
 		focus(NULL);
 		arrange(selmon);

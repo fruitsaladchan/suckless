@@ -86,6 +86,7 @@ static const Key keys[] = {
     { MODKEY,                       XK_Return, spawn,          {.v = (const char*[]){ "st", NULL } } },
     { MODKEY|ShiftMask,             XK_w,      spawn,          {.v = (const char*[]){ "librewolf", NULL } } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
+    { MODKEY|ShiftMask,             XK_b,      toggletopbar,   {0} },
 	{ MODKEY,		            	XK_a,	   defaultgaps,    {0}},
 	{ MODKEY|ShiftMask,		        XK_a,      togglegaps,     {0} },
 	{ MODKEY, 			            XK_z, 	   incrgaps, 	   {.i = +3}},
@@ -94,8 +95,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_minus,  incrogaps,      {.i = -1 } },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
-/*  { MODKEY,                       XK_g,      incnmaster,     {.i = +1 } }, 
-	{ MODKEY,                       XK_m,      incnmaster,     {.i = -1 } }, */
+ /* { MODKEY,                       XK_g,      incnmaster,     {.i = +1 } }, 
+	{ MODKEY,                       XK_m,      incnmaster,     {.i = -1 } },  */
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
