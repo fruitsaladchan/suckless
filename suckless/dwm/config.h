@@ -17,7 +17,8 @@ static const int showbar            = 1;       /* 0 means no bar */
 static int topbar                   = 1;       /* 0 means bottom bar */
 static const int vertpad            = 0;       /* vertical padding of bar 11 is default */
 static const int sidepad            = 0;       /* 100 default horizontal padding of bar, 11 for flat */
-// static const char *fonts[] = {"JetBrainsMono Nerd Font:size=9.5:style:Bold"};
+static int hidevacant               = 1;       /* 1 means hide vacant tags, 0 means show all tags */
+static const int refreshrate        = 60;
 static const char *fonts[] = {"monocraft:size=9.5:style:Bold"};
 static char normbgcolor[]           = "#222222";
 static char normbordercolor[]       = "#444444";
@@ -87,6 +88,7 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,             XK_w,      spawn,          {.v = (const char*[]){ "librewolf", NULL } } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
     { MODKEY|ShiftMask,             XK_b,      toggletopbar,   {0} },
+    { MODKEY|ShiftMask,             XK_v,      togglehidevacant,{0} }, 
 	{ MODKEY,		            	XK_a,	   defaultgaps,    {0}},
 	{ MODKEY|ShiftMask,		        XK_a,      togglegaps,     {0} },
 	{ MODKEY, 			            XK_z, 	   incrgaps, 	   {.i = +3}},
@@ -96,7 +98,7 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
  /* { MODKEY,                       XK_g,      incnmaster,     {.i = +1 } }, 
-	{ MODKEY,                       XK_m,      incnmaster,     {.i = -1 } },  */
+	{ MODKEY,                       XK_m,      incnmaster,     {.i = -1 } }, */
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
@@ -120,10 +122,10 @@ static const Key keys[] = {
     { MODKEY, 			            XK_i,	   setlayout, 	   {.v = &layouts[3]}}, //centered master
     { MODKEY|ShiftMask, 		    XK_i,	   setlayout, 	   {.v = &layouts[4]}}, //floating centered master
     { MODKEY|ShiftMask, 		    XK_t,	   setlayout, 	   {.v = &layouts[5]}}, //bstack
-    { MODKEY, 			            XK_y,	   setlayout, 	   {.v = &layouts[7]}},
-    { MODKEY|ShiftMask, 		    XK_y,	   setlayout, 	   {.v = &layouts[8]}},
-    { MODKEY, 			            XK_u,	   setlayout, 	   {.v = &layouts[9]}},
-    { MODKEY|ShiftMask,		        XK_u,	   setlayout, 	   {.v = &layouts[10]}},
+    { MODKEY, 			            XK_y,	   setlayout, 	   {.v = &layouts[7]}}, //spiral
+    { MODKEY|ShiftMask, 		    XK_y,	   setlayout, 	   {.v = &layouts[8]}}, //dwindle
+    { MODKEY, 			            XK_u,	   setlayout, 	   {.v = &layouts[9]}}, //horizgrid
+    { MODKEY|ShiftMask,		        XK_u,	   setlayout, 	   {.v = &layouts[10]}}, //gaplessgrid
     { MODKEY,			            XK_w,	   togglefloating, {0}},
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
@@ -145,9 +147,11 @@ static const Key keys[] = {
     { MODKEY,                      XK_p,  spawn, {.v = (const char*[]){ "wallpaper", NULL } } },
     { MODKEY|ShiftMask,            XK_n,  spawn, {.v = (const char*[]){ "dmenu-notes", NULL } } },
     { MODKEY|ShiftMask,            XK_p,  spawn, {.v = (const char*[]){ "passmenu", "-i", "-l", "10",  NULL } } },
-    { MODKEY|ShiftMask,            XK_s,  spawn, {.v = (const char*[]){ "shot", "select", NULL } } },
-    { MODKEY|ShiftMask,            XK_Print,  spawn, {.v = (const char*[]){ "shot", "full", "full", NULL } } },
+    { MODKEY|ShiftMask|ControlMask,XK_s,  spawn, {.v = (const char*[]){ "shot", "select", NULL } } },
+    { MODKEY|ShiftMask,            XK_s,  spawn, {.v = (const char*[]){ "shot", "select_copy", NULL } } },
     { MODKEY|ShiftMask|ControlMask,XK_t,  spawn, {.v = (const char*[]){ "shot", "text", "full", NULL } } },
+    { MODKEY,                      XK_Print,  spawn, {.v = (const char*[]){ "shot", "full", "full", NULL } } },
+    { MODKEY|ShiftMask|ControlMask,XK_Print,  spawn, {.v = (const char*[]){ "shot", "window", "full", NULL } } },
     { 0, XF86XK_MonBrightnessUp,   spawn, {.v = (const char*[]){ "changebrightness", "up", NULL } } },
     { 0, XF86XK_MonBrightnessDown, spawn, {.v = (const char*[]){ "changebrightness", "down", NULL } } },
     { 0, XF86XK_AudioRaiseVolume,  spawn, SHCMD("pactl set-sink-volume @DEFAULT_SINK@ +5%") },

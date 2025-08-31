@@ -278,7 +278,7 @@ static void xrdb(const Arg *arg);
 static void zoom(const Arg *arg);
 static void sighup(int unused);
 static void sigterm(int unused);
-
+static void togglehidevacant(const Arg *arg);
 
 static pid_t getparentprocess(pid_t p);
 static int isdescprocess(pid_t p, pid_t c);
@@ -496,6 +496,13 @@ attachstack(Client *c)
 }
 
 void
+togglehidevacant(const Arg *arg)
+{
+    hidevacant = !hidevacant;
+    drawbars();
+}
+
+void
 swallow(Client *p, Client *c)
 {
 
@@ -565,9 +572,12 @@ buttonpress(XEvent *e)
 			occ |= c->tags == TAGMASK ? 0 : c->tags;
 		do {
 			/* Do not reserve space for vacant tags */
-			if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
-				continue;
-			x += TEXTW(tags[i]);
+			// 	continue;
+            // if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+			// x += TEXTW(tags[i]);
+            if (hidevacant && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+                continue;
+            x += TEXTW(tags[i]);
 		} while (ev->x >= x && ++i < LENGTH(tags));
         if (i < LENGTH(tags)) {
             click = ClkTagBar;
@@ -853,6 +863,58 @@ dirtomon(int dir)
 
 
 
+// void
+// drawbar(Monitor *m)
+// {
+// 	int x, w, tw = 0;
+// 	unsigned int i, occ = 0, urg = 0;
+// 	Client *c;
+//
+// 	if (!m->showbar)
+// 		return;
+//
+// 	drw_setscheme(drw, scheme[SchemeNorm]);
+// 	drw_rect(drw, 0, 0, m->ww, bh, 1, 1); // bar background
+//
+// 	if (m == selmon) {
+// 		tw = TEXTW(stext) - lrpad + 2;
+// 		drw_text(drw, m->ww - tw - 2 * sp, 0, tw, bh, 0, stext, 0);
+// 	}
+//
+// 	for (c = m->clients; c; c = c->next) {
+// 		occ |= c->tags == TAGMASK ? 0 : c->tags;
+// 		if (c->isurgent)
+// 			urg |= c->tags;
+// 	}
+// 	x = 0;
+// 	for (i = 0; i < LENGTH(tags); i++) {
+// 		/* Do not draw vacant tags */
+// 		if(!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+// 			continue;
+// 		w = TEXTW(tags[i]);
+// 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
+// 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+// 		x += w;
+// 	}
+//
+// 	w = TEXTW(m->ltsymbol);
+// 	drw_setscheme(drw, scheme[SchemeNorm]);
+// 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+//
+// 	if ((w = m->ww - tw - x) > bh) {
+// 		drw_setscheme(drw, scheme[SchemeNorm]);
+// 		drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
+// 	}
+//
+// 	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
+//
+// 	// Draw border after drw_map to avoid it being overwritten
+//
+// 	XSetForeground(dpy, drw->gc, scheme[SchemeNorm][ColBorder].pixel);
+// 	XDrawRectangle(dpy, m->barwin, drw->gc, 0, 0, m->ww - 1, bh - 1);
+//     XDrawLine(dpy, m->barwin, drw->gc, m->ww - 1, 0, m->ww - 1, bh - 1); // right border only
+// }
+
 void
 drawbar(Monitor *m)
 {
@@ -878,8 +940,8 @@ drawbar(Monitor *m)
 	}
 	x = 0;
 	for (i = 0; i < LENGTH(tags); i++) {
-		/* Do not draw vacant tags */
-		if(!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
+		/* skip vacant tags if hidevacant is enabled */
+		if(hidevacant && !(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
 			continue;
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
@@ -899,7 +961,6 @@ drawbar(Monitor *m)
 	drw_map(drw, m->barwin, 0, 0, m->ww, bh);
 
 	// Draw border after drw_map to avoid it being overwritten
-
 	XSetForeground(dpy, drw->gc, scheme[SchemeNorm][ColBorder].pixel);
 	XDrawRectangle(dpy, m->barwin, drw->gc, 0, 0, m->ww - 1, bh - 1);
     XDrawLine(dpy, m->barwin, drw->gc, m->ww - 1, 0, m->ww - 1, bh - 1); // right border only
@@ -1419,7 +1480,7 @@ movemouse(const Arg *arg)
 			handler[ev.type](&ev);
 			break;
 		case MotionNotify:
-			if ((ev.xmotion.time - lasttime) <= (1000 / 60))
+			if ((ev.xmotion.time - lasttime) <= (1000 / refreshrate))
 				continue;
 			lasttime = ev.xmotion.time;
 
@@ -1724,7 +1785,7 @@ resizemouse(const Arg *arg)
 			handler[ev.type](&ev);
 			break;
 		case MotionNotify:
-			if ((ev.xmotion.time - lasttime) <= (1000 / 60))
+                if ((ev.xmotion.time - lasttime) <= (1000 / refreshrate))
 				continue;
 			lasttime = ev.xmotion.time;
 
@@ -2155,6 +2216,8 @@ toggletopbar(const Arg *arg)
 	XMoveResizeWindow(dpy, selmon->barwin, selmon->wx + sp, selmon->by + vp, selmon->ww - 2 * sp, bh);
 	arrange(selmon);
 }
+
+
 
 void
 togglefloating(const Arg *arg)

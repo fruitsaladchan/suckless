@@ -28,6 +28,8 @@ bool cg_zoom(arg_t);
 bool cg_copy_path(arg_t);
 bool cg_copy_image(arg_t);
 bool cg_dmenu_search(arg_t);
+bool ci_flip_permanent(arg_t);
+bool ci_rotate_permanent(arg_t);
 /* image mode */
 bool ci_alternate(arg_t);
 bool ci_cursor_navigate(arg_t);
@@ -79,6 +81,8 @@ bool ct_select(arg_t);
 #define g_dmenu_search { cg_dmenu_search, MODE_ALL }
 #define g_copy_path    { cg_copy_path, MODE_ALL }
 #define g_copy_image    { cg_copy_image, MODE_ALL }
+#define i_flip_permanent { ci_flip_permanent, MODE_IMAGE }
+#define i_rotate_permanent { ci_rotate_permanent, MODE_IMAGE }
 
 /* image mode */
 #define i_alternate { ci_alternate, MODE_IMAGE }

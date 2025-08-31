@@ -423,6 +423,84 @@ bool cg_dmenu_search(arg_t _)
 	return navigate_to(goto_img);
 }
 
+// permanently rotate the image file using ImageMagick
+bool ci_rotate_permanent(arg_t degree) {
+    if (!files || !files[fileidx].path)
+        return false;
+
+    int rfd, wfd;
+    char rotation_str[8];
+
+    // Convert degree to string for ImageMagick
+    snprintf(rotation_str, sizeof(rotation_str), "%d", (int)degree);
+
+    // Execute ImageMagick rotate command
+    const char *magick_cmd[] = {
+        "magick", files[fileidx].path, "-rotate", rotation_str, files[fileidx].path, NULL
+    };
+
+    if (spawn(&rfd, &wfd, 0, (char **)magick_cmd) < 0)
+        return false;
+
+    close(wfd);
+    close(rfd);
+
+    // Reload the image to show the permanent change
+    if (mode == MODE_IMAGE) {
+        load_image(fileidx);
+    } else {
+        win_set_cursor(&win, CURSOR_WATCH);
+        if (!tns_load(&tns, fileidx, true, false)) {
+            remove_file(fileidx, false);
+            tns.dirty = true;
+        }
+    }
+
+    return true;
+}
+
+// permanently flip the image file using ImageMagick
+bool ci_flip_permanent(arg_t dir) {
+    if (!files || !files[fileidx].path)
+        return false;
+
+    int rfd, wfd;
+    const char *flip_operation;
+
+    // Determine flip operation based on direction
+    if (dir == FLIP_HORIZONTAL) {
+        flip_operation = "-flop";
+    } else if (dir == FLIP_VERTICAL) {
+        flip_operation = "-flip";
+    } else {
+        return false;
+    }
+
+    // Execute ImageMagick flip command
+    const char *magick_cmd[] = {
+        "magick", files[fileidx].path, flip_operation, files[fileidx].path, NULL
+    };
+
+    if (spawn(&rfd, &wfd, 0, (char **)magick_cmd) < 0)
+        return false;
+
+    close(wfd);
+    close(rfd);
+
+    // Reload the image to show the permanent change
+    if (mode == MODE_IMAGE) {
+        load_image(fileidx);
+    } else {
+        win_set_cursor(&win, CURSOR_WATCH);
+        if (!tns_load(&tns, fileidx, true, false)) {
+            remove_file(fileidx, false);
+            tns.dirty = true;
+        }
+    }
+
+    return true;
+}
+
 
 bool ci_navigate(arg_t n)
 {
