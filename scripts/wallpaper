@@ -1,23 +1,25 @@
-#!/usr/bin/env bash
+#!/usr/bin/sh
 
-# Combined wallpaper picker and setter using nsxiv and pywal
+# combined wallpaper picker and setter using nsxiv and pywal
 
-# Set default wallpaper directory
+# set default wallpaper directory
 DEFAULT_WALLDIR="$HOME/Pictures/wallpaper"
-WALLDIR="${1:-$DEFAULT_WALLDIR}"
+WALLDIR="$DEFAULT_WALLDIR"
 BG_LINK="${XDG_DATA_HOME:-$HOME/.local/share}/bg"
 
-# Function to choose wallpaper using nsxiv
+# choose wallpaper using nsxiv
 choose_wallpaper() {
     local dir="$1"
+    local set_func="${2:-set_wallpaper}"  # Defaults to set_wallpaper if not provided
+
     command -v nsxiv >/dev/null || { echo "nsxiv not found"; exit 1; }
 
-    nsxiv -otb "$dir"/* | while read -r selected; do
-        [ -f "$selected" ] && set_wallpaper "$selected"
+    nsxiv -otr "$dir"/* | while read -r selected; do
+        [ -f "$selected" ] && "$set_func" "$selected"
     done
 }
 
-# Function to set wallpaper, generate wal colors, and notify
+# set wallpaper and generate colors with wal
 set_wallpaper() {
     img_path="$(readlink -f "$1")"
     ln -sf "$img_path" "$BG_LINK"
@@ -29,7 +31,19 @@ set_wallpaper() {
     xwallpaper --zoom "$BG_LINK"
 }
 
-# Function to restore the last set wallpaper
+# set wallpaper using wal -l for light theme
+set_wallpaper_light() {
+    img_path="$(readlink -f "$1")"
+    ln -sf "$img_path" "$BG_LINK"
+
+    if command -v wal >/dev/null; then
+        wal -l -n -i "$BG_LINK" -o "${XDG_CONFIG_HOME:-$HOME/.config}/wal/postrun" >/dev/null 2>&1
+    fi
+
+    xwallpaper --zoom "$BG_LINK"
+}
+
+# restore the last set wallpaper
 restore_wallpaper() {
     if [ -L "$BG_LINK" ] && [ -f "$BG_LINK" ]; then
         set_wallpaper "$(readlink -f "$BG_LINK")"
@@ -39,21 +53,104 @@ restore_wallpaper() {
     fi
 }
 
-# Main logic
-if [[ "$1" == "-r" || "$1" == "--restore" ]]; then
-    restore_wallpaper
-elif [ -n "$1" ] && [ -e "$1" ]; then
-    target="$(readlink -f "$1")"
-    mimetype=$(file --mime-type -b "$target")
-    if [[ $mimetype == image/* ]]; then
-        set_wallpaper "$target"
-    elif [[ $mimetype == inode/directory ]]; then
-        choose_wallpaper "$target"
+# print current wallpaper path
+print_wallpaper_path() {
+    if [ -L "$BG_LINK" ] && [ -f "$BG_LINK" ]; then
+        readlink -f "$BG_LINK"
     else
-        notify-send "Error" "Not a valid image or directory."
+        echo "No wallpaper currently set."
         exit 1
     fi
-else
-    # No argument: open nsxiv in default WALLDIR
-    choose_wallpaper "$DEFAULT_WALLDIR"
-fi
+}
+
+# choose subdirectory via dmenu
+choose_directory_dmenu() {
+    local set_func="${1:-set_wallpaper}"
+
+    command -v dmenu >/dev/null || { echo "dmenu not found"; exit 1; }
+
+    selected_dir=$(find "$WALLDIR" -mindepth 1 -type d | sed "s|$WALLDIR/||" | dmenu -i -p "Choose directory:")
+
+    if [ -n "$selected_dir" ]; then
+        full_path="$WALLDIR/$selected_dir"
+        if [ -d "$full_path" ]; then
+            choose_wallpaper "$full_path" "$set_func"
+        else
+            exit 1
+        fi
+    else
+        exit 0
+    fi
+}
+
+# show help
+show_help() {
+    cat <<EOF
+Usage: $(basename "$0") [OPTION] [IMAGE|DIR]
+
+Options:
+  -r, --restore     Restore the last set wallpaper
+  -p, --print       Print the path of the current wallpaper
+  -d                Choose subdirectory using dmenu
+  -l                Set a wallpaper and generate a light theme with wal -l
+  -h, --help        Show this help message
+
+If IMAGE or DIR is given, set the wallpaper or open nsxiv in that directory.
+If no arguments are given, open nsxiv in the default wallpaper directory.
+EOF
+}
+
+case "$1" in
+    -r|--restore)
+        restore_wallpaper
+        ;;
+    -p|--print)
+        print_wallpaper_path
+        ;;
+    -d)
+        choose_directory_dmenu
+        ;;
+    -l)
+        shift
+        if [ "$1" = "-d" ]; then
+            choose_directory_dmenu set_wallpaper_light
+        elif [ -n "$1" ] && [ -e "$1" ]; then
+            target="$(readlink -f "$1")"
+            mimetype=$(file --mime-type -b "$target")
+            if [[ $mimetype == image/* ]]; then
+                set_wallpaper_light "$target"
+            elif [[ $mimetype == inode/directory ]]; then
+                choose_wallpaper "$target" set_wallpaper_light
+            else
+                echo "Unsupported file type: $target"
+                exit 1
+            fi
+        else
+            choose_wallpaper "$DEFAULT_WALLDIR" set_wallpaper_light
+        fi
+        ;;
+    -h|--help)
+        show_help
+        ;;
+    "")
+        choose_wallpaper "$DEFAULT_WALLDIR"
+        ;;
+    *)
+        if [ -e "$1" ]; then
+            target="$(readlink -f "$1")"
+            mimetype=$(file --mime-type -b "$target")
+            if [[ $mimetype == image/* ]]; then
+                set_wallpaper "$target"
+            elif [[ $mimetype == inode/directory ]]; then
+                choose_wallpaper "$target"
+            else
+                exit 1
+            fi
+        else
+            echo "Invalid file or option: $1"
+            show_help
+            exit 1
+        fi
+        ;;
+esac
+

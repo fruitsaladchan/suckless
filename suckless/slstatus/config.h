@@ -86,7 +86,6 @@ static const struct arg args[] = {
     // {disk_perc, "   %s%  |", "/home"},
     {wifi_essid, "[ %s -", "wlan0"},
     {ipv4, " %s ] ", "wlan0"},
-
     // {fanspeed, " %s | ", "/sys/class/hwmon/hwmon2/device/fan1_input" },
     // {io_in, "R %s/", NULL},
     // {io_out, " W %s | ", NULL},

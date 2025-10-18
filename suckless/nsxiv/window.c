@@ -187,7 +187,7 @@ void win_init(win_t *win)
 	xft_alloc_color(e, bar_bg, &win->bar_bg);
 	xft_alloc_color(e, bar_fg, &win->bar_fg);
 
-	f = win_res(db, BAR_FONT[0], BAR_FONT[1] ? BAR_FONT[1] : "monospace-8");
+	f = win_res(db, BAR_FONT[0], BAR_FONT[1] ? BAR_FONT[1] : "monocraft-8");
 	win_init_font(e, f);
 	ellipsis_w = TEXTWIDTH(win, (char *)ellipsis, ELLIPSIS_LEN);
 

@@ -6,15 +6,19 @@ output_file="$output_dir/$timestamp.png"
 
 if [[ "$1" == "full" ]]; then
     # full screen capture
-    scrot --pointer --quality=100 "$output_file"
+    scrot --pointer --quality=100  -o "$output_file"
 
 elif [[ "$1" == "select" ]]; then
     # select area to capture
     scrot --select --line width=2,opacity=60,mode=edge "$output_file"
+elif [[ "$1" == "select_copy" ]]; then # select area to capture and copy to clipboard
+    scrot --select --line width=2,opacity=60,mode=edge /tmp/screenshot.png
+    xclip -selection clipboard -target image/png -i /tmp/screenshot.png
+    rm /tmp/screenshot.png
 
 elif [[ "$1" == "window" ]]; then
     # capture window
-    scrot  --pointer --window "$(xdotool getwindowfocus -f)" "$output_file"
+    scrot  --pointer --quality=100 --window "$(xdotool getwindowfocus -f)" -o "$output_file"
 elif [[ "$1" == "text" ]]; then
     # capture selected area and extract text using tesseract
     scrot --select --line width=2,opacity=60,mode=edge "$output_file"

@@ -14,7 +14,7 @@ static const char *MARK_FG[]  = { "Nsxiv.mark.foreground",      NULL };
 #if HAVE_LIBFONTS
 static const char *BAR_BG[]   = { "Nsxiv.bar.background",       NULL };
 static const char *BAR_FG[]   = { "Nsxiv.bar.foreground",       NULL };
-static const char *BAR_FONT[] = { "Nsxiv.bar.font",            "monospace-9" };
+static const char *BAR_FONT[] = { "Nsxiv.bar.font",            "monocraft-8" };
 
 /* if true, statusbar appears on top of the window */
 static const bool TOP_STATUSBAR = false;
@@ -118,7 +118,7 @@ static const keymap_t keys[] = {
 	{ 0,            XK_D,             g_remove_image,       None },
 	{ 0,            XK_slash,         g_dmenu_search,       None },
 	{ 0,            XK_Y,		  g_copy_path,	        None },
-	{ 0,            XK_v,		  g_copy_image,	        None },
+	{ 0,            XK_y,		  g_copy_image,	        None },
 	{ ControlMask,  XK_h,             g_scroll_screen,      DIR_LEFT },
 	{ ControlMask,  XK_Left,          g_scroll_screen,      DIR_LEFT },
 	{ ControlMask,  XK_j,             g_scroll_screen,      DIR_DOWN },

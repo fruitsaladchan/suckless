@@ -9,6 +9,9 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <sys/wait.h>
+#include <unistd.h>
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
@@ -628,16 +631,57 @@ insert:
 		sel = curr = prev;
 		calcoffsets();
 		break;
-	case XK_Return:
-	case XK_KP_Enter:
-		puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
-		if (!(ev->state & ControlMask)) {
-			cleanup();
-			exit(0);
-		}
-		if (sel)
-			sel->out = 1;
-		break;
+    case XK_Return:
+    case XK_KP_Enter: 
+            {
+                char *output = (sel && !(ev->state & ShiftMask)) ? sel->text : text;
+                int len = strlen(output);
+                int open_in_terminal = 0;
+
+                // check if output ends with "!" or "<space> !"
+                if (len > 0 && output[len-1] == '!') {
+                    open_in_terminal = 1;
+
+                    char command[512];
+                    char trimmed[512];
+
+                    // copy and remove the trailing "!"
+                    strncpy(trimmed, output, len-1);
+                    trimmed[len-1] = '\0';
+
+                    // trim trailing space if it exists
+                    int trimmed_len = len-1;
+                    while (trimmed_len > 0 && trimmed[trimmed_len-1] == ' ') {
+                        trimmed[trimmed_len-1] = '\0';
+                        trimmed_len--;
+                    }
+
+                    // if there's a command, run it in terminal, otherwise just open terminal
+                    if (trimmed_len > 0) {
+                        snprintf(command, sizeof(command), "st -e sh -c '%s; exec $SHELL'", trimmed);
+                    } else {
+                        snprintf(command, sizeof(command), "st");
+                    }
+
+                    // fork and exec
+                    if (fork() == 0) {
+                        setsid();
+                        execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+                        _exit(1);
+                    }
+                } else {
+                    // normal behavior - just output the text
+                    puts(output);
+                }
+
+                if (!(ev->state & ControlMask)) {
+                    cleanup();
+                    exit(0);
+                }
+                if (sel)
+                    sel->out = 1;
+            }
+            break;
 	case XK_Right:
 	case XK_KP_Right:
 		if (text[cursor] != '\0') {
